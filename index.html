@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор КВМ та Оцінювання у ЗФПО</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                        },
+                        emerald: {
+                            600: '#059669',
+                            700: '#047857'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; font-size: 12pt; color: black !important; }
+            .shadow-xl, .shadow-md, .shadow-sm { box-shadow: none !important; }
+            .border { border-color: #cbd5e1 !important; }
+            .page-break { page-break-before: always; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gradient-to-r from-brand-800 via-brand-700 to-sky-900 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/20">
+                        <i class="fa-solid fa-square-poll-vertical text-2xl text-sky-300"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight">Конструктор КВМ та Оцінювання в ЗФПО</h1>
+                        <p class="text-xs text-sky-200">Методичний вебінструмент для викладачів та майбутніх педагогів ЗФПО</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetConstructor()" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-100 rounded-lg text-xs font-medium transition flex items-center gap-1 border border-red-400/30">
+                        <i class="fa-solid fa-rotate-left"></i> Очистити
+                    </button>
+                    <button onclick="saveToLocalStorage()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition flex items-center gap-1 border border-white/20">
+                        <i class="fa-solid fa-floppy-disk"></i> Зберегти стан
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Wizard Navigation Steps (no-print) -->
+        <div class="mb-8 no-print">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 text-center">
+                <button onclick="goToStep(0)" id="step-btn-0" class="step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-brand-500 text-brand-700 shadow-sm">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Крок 0</span>
+                    <span class="text-sm font-bold flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> Паспорт дисципліни</span>
+                </button>
+                <button onclick="goToStep(1)" id="step-btn-1" class="step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 hover:border-slate-300">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Крок 1</span>
+                    <span class="text-sm font-bold flex items-center gap-1"><i class="fa-solid fa-list-check"></i> Специфікація КВМ</span>
+                </button>
+                <button onclick="goToStep(2)" id="step-btn-2" class="step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 hover:border-slate-300">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Крок 2</span>
+                    <span class="text-sm font-bold flex items-center gap-1"><i class="fa-solid fa-table-cells"></i> Рубрикатор</span>
+                </button>
+                <button onclick="goToStep(3)" id="step-btn-3" class="step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 hover:border-slate-300">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Крок 3</span>
+                    <span class="text-sm font-bold flex items-center gap-1"><i class="fa-solid fa-shield-heart"></i> Освітні втрати</span>
+                </button>
+                <button onclick="goToStep(4)" id="step-btn-4" class="step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 hover:border-slate-300 col-span-2 md:col-span-1">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Підсумок</span>
+                    <span class="text-sm font-bold flex items-center gap-1 text-emerald-600"><i class="fa-solid fa-file-pdf"></i> Звіт & PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 0: Passport -->
+        <section id="step-0" class="step-content bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-500"></i> Крок 0. Загальні відомості про курс та контроль у ЗФПО
+                </h2>
+                <p class="text-sm text-slate-500">Заповніть базовані дані освітньо-професійної програми фахового молодшого бакалавра</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Галузь / Спеціальність ЗФПО *</label>
+                    <select id="specialty" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm">
+                        <option value="121 Інженерія програмного забезпечення">121 Інженерія програмного забезпечення</option>
+                        <option value="122 Комп'ютерні науки / ІТ">122 Комп'ютерні науки / ІТ</option>
+                        <option value="071 Облік і оподаткування / Економіка">071 Облік і оподаткування / Економіка</option>
+                        <option value="192 Будівництво та цивільна інженерія">192 Будівництво та цивільна інженерія</option>
+                        <option value="201 Агрономія / Агроінженерія">201 Агрономія / Агроінженерія</option>
+                        <option value="274 Автомобільний транспорт">274 Автомобільний транспорт</option>
+                        <option value="241 Готельно-ресторанна справа / Кулінарія">241 Готельно-ресторанна справа / Кулінарія</option>
+                        <option value="Інша спеціальність ЗФПО">Інша спеціальність ЗФПО</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Назва навчальної дисципліни *</label>
+                    <input type="text" id="courseTitle" value="Інформаційні технології" placeholder="напр., Інформатика та ІТ" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Тема практичної роботи / Модуля *</label>
+                    <input type="text" id="topicTitle" value="Застосування галузевих табличних процесорів для вирішення прикладних задач" placeholder="Тема практичного блоку" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Вид та форма контролю *</label>
+                    <select id="controlType" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm">
+                        <option value="Поточний контроль практичної роботи">Поточний контроль практичної роботи</option>
+                        <option value="Рубежевий / Модульний контроль">Рубежевий / Модульний контроль</option>
+                        <option value="Підсумковий залік / Іспит">Підсумковий залік / Іспит</option>
+                        <option value="Захист практичного фахового кейсу">Захист практичного фахового кейсу</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Розробник / Студент-педагог (ПІБ, група) *</label>
+                    <input type="text" id="authorName" placeholder="Шевченко О. В., група 4-А" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm">
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button onclick="goToStep(1)" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold shadow-md transition flex items-center gap-2">
+                    Далі: Специфікація КВМ <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 1: Test Specification & Items -->
+        <section id="step-1" class="step-content bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 hidden">
+            <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-500"></i> Крок 1. Конструктор Специфікації та Завдань КВМ
+                    </h2>
+                    <p class="text-sm text-slate-500">Сформуйте завдання трьох рівнів складності та вкажіть систему балів</p>
+                </div>
+                <button onclick="addQuestion()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Додати завдання
+                </button>
+            </div>
+
+            <!-- Questions Container -->
+            <div id="questions-list" class="space-y-6">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div class="mt-8 flex justify-between items-center pt-4 border-t border-slate-100">
+                <button onclick="goToStep(0)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </button>
+                <button onclick="goToStep(2)" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold shadow-md transition flex items-center gap-2">
+                    Далі: Рубрикатор оцінювання <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 2: Evaluation Rubric -->
+        <section id="step-2" class="step-content bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 hidden">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells text-brand-500"></i> Крок 2. Конструктор Рубрики оцінювання (Критерії досягнень)
+                </h2>
+                <p class="text-sm text-slate-500">Налаштуйте дескриптори рівнів навчальних досягнень для здобувачів освіти ЗФПО</p>
+            </div>
+
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                            <th class="p-3 border border-slate-200 w-1/5">Критерій оцінювання</th>
+                            <th class="p-3 border border-slate-200 w-1/5 bg-emerald-50 text-emerald-800">Високий рівень</th>
+                            <th class="p-3 border border-slate-200 w-1/5 bg-sky-50 text-sky-800">Достатній рівень</th>
+                            <th class="p-3 border border-slate-200 w-1/5 bg-amber-50 text-amber-800">Середній рівень</th>
+                            <th class="p-3 border border-slate-200 w-1/5 bg-rose-50 text-rose-800">Початковий рівень</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rubric-tbody" class="text-xs space-y-2">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="goToStep(1)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </button>
+                <button onclick="goToStep(3)" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold shadow-md transition flex items-center gap-2">
+                    Далі: Подолання освітніх втрат <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 3: Learning Loss & Common Errors (SR 22) -->
+        <section id="step-3" class="step-content bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 hidden">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-heart text-brand-500"></i> Крок 3. Блок аналізу типових помилок та надолуження освітніх втрат (СР 22)
+                </h2>
+                <p class="text-sm text-slate-500">Вкажіть типові помилки здобувачів та розробіть вирівнювальний комплекс завдань</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Типові помилки здобувачів освіти ЗФПО при виконанні практичної роботи *</label>
+                    <textarea id="commonErrors" rows="4" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 text-sm" placeholder="Наприклад: 1. Невірна адресація комірок в Excel при копіюванні формул; 2. Відсутність форматування даних за фаховим стандартом; 3. Помилки при виборі типу діаграми для галузевих показників."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Комплекс вирівнювальних завдань / Картка надолуження освітніх втрат *</label>
+                    <textarea id="remediationTasks" rows="4" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 text-sm" placeholder="Опишіть завдання для подолання втрат: 1. Експрес-тренажер на абсолютні посилання; 2. Відеоінструкція з корекції файлу; 3. Повторна практична мікровправа з автоматичною перевіркою."></textarea>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="goToStep(2)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </button>
+                <button onclick="goToStep(4)" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md transition flex items-center gap-2">
+                    Сформувати Звіт <i class="fa-solid fa-check"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 4: Summary / Print PDF -->
+        <section id="step-4" class="step-content bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 hidden">
+            <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center no-print">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf text-emerald-600"></i> Згенерований навчально-методичний комплекс
+                    </h2>
+                    <p class="text-sm text-slate-500">Перевірте сформований документ та завантажте його у форматі PDF</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i> Друк / Зберегти в PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Print Document Container -->
+            <div id="print-document" class="p-4 md:p-8 border border-slate-200 rounded-xl bg-white text-slate-900 leading-relaxed text-sm">
+                <!-- Header of Document -->
+                <div class="text-center border-b-2 border-slate-800 pb-4 mb-6">
+                    <h3 class="font-bold text-lg uppercase tracking-wide">ЗАКЛАД ФАХОВОЇ ПЕРЕДВИЩОЇ ОСВІТИ</h3>
+                    <h4 class="font-bold text-base mt-1 text-slate-700" id="doc-specialty">Спеціальність</h4>
+                    <p class="text-xs text-slate-600 mt-1">НАВЧАЛЬНО-МЕТОДИЧНИЙ КОМПЛЕКС КВМ ТА КРИТЕРІЇВ ОЦІНЮВАННЯ</p>
+                </div>
+
+                <!-- Passport Info -->
+                <div class="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
+                    <div><strong>Дисципліна:</strong> <span id="doc-course"></span></div>
+                    <div><strong>Вид контролю:</strong> <span id="doc-control"></span></div>
+                    <div><strong>Тема модуля/роботи:</strong> <span id="doc-topic"></span></div>
+                    <div><strong>Розробник:</strong> <span id="doc-author"></span></div>
+                </div>
+
+                <!-- Section 1: Questions -->
+                <div class="mb-6">
+                    <h4 class="font-bold text-sm uppercase text-slate-800 border-b border-slate-300 pb-1 mb-3">1. Специфікація КВМ та контрольні завдання</h4>
+                    <div id="doc-questions" class="space-y-4 text-xs">
+                        <!-- Rendered Questions -->
+                    </div>
+                </div>
+
+                <!-- Section 2: Rubric -->
+                <div class="mb-6 page-break">
+                    <h4 class="font-bold text-sm uppercase text-slate-800 border-b border-slate-300 pb-1 mb-3">2. Критерії оцінювання навчальних досягнень (Рубрикатор)</h4>
+                    <table class="w-full border-collapse border border-slate-300 text-[11px] mb-4">
+                        <thead>
+                            <tr class="bg-slate-100">
+                                <th class="border border-slate-300 p-2">Критерій</th>
+                                <th class="border border-slate-300 p-2">Високий</th>
+                                <th class="border border-slate-300 p-2">Достатній</th>
+                                <th class="border border-slate-300 p-2">Середній</th>
+                                <th class="border border-slate-300 p-2">Початковий</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doc-rubric-body">
+                            <!-- Rendered Rubric -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Section 3: Remediation -->
+                <div class="mb-6">
+                    <h4 class="font-bold text-sm uppercase text-slate-800 border-b border-slate-300 pb-1 mb-3">3. Картка подолання освітніх втрат та аналіз типових помилок</h4>
+                    <div class="space-y-3 text-xs">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                            <strong>Типові помилки здобувачів:</strong>
+                            <p id="doc-errors" class="mt-1 text-slate-700 whitespace-pre-line"></p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                            <strong>Вирівнювальний комплекс завдань для надолуження втрат:</strong>
+                            <p id="doc-remediation" class="mt-1 text-slate-700 whitespace-pre-line"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer signature -->
+                <div class="mt-12 pt-4 border-t border-slate-300 flex justify-between text-xs text-slate-500">
+                    <div>Дата формування: <span id="doc-date"></span></div>
+                    <div>Підпис розробника: _______________</div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center no-print">
+                <button onclick="goToStep(3)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Назад до редагування
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer (no-print) -->
+    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs no-print border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 Компетентнісний тренажер ЗФПО | Розроблено для лабораторних та практичних занять з методики викладання ІТ</p>
+        </div>
+    </footer>
+
+    <!-- App Logic Script -->
+    <script>
+        // State Management
+        let appState = {
+            currentStep: 0,
+            specialty: "121 Інженерія програмного забезпечення",
+            courseTitle: "Інформаційні технології",
+            topicTitle: "Застосування галузевих табличних процесорів для вирішення прикладних задач",
+            controlType: "Поточний контроль практичної роботи",
+            authorName: "",
+            questions: [
+                {
+                    id: 1,
+                    type: "Практичний галузевий кейс",
+                    level: "Фахово-прикладний",
+                    score: 2,
+                    text: "Побудувати розрахункову таблицю відомості заробітної плати співробітників з використанням формул ВПР (VLOOKUP) та умовного форматування за стандартом галузі.",
+                    answer: "Файл з виконаним розрахунком та вірно налаштованими абсолютними адресами комірок."
+                },
+                {
+                    id: 2,
+                    type: "Множинний вибір",
+                    level: "Початковий/Базовий",
+                    score: 1,
+                    text: "Який тип адресації комірок слід застосувати у формулі Excel, щоб при копіюванні посилання на комірку $A$1 залишалося незмінним?",
+                    answer: "Абсолютна адресація"
+                }
+            ],
+            rubric: [
+                {
+                    criterion: "Теоретичні знання та термінологія",
+                    high: "Повно та аргументовано демонструє знання галузевих ІТ-термінів, вірно пояснює алгоритми.",
+                    good: "Впевнено володіє теорією, допускає незначні неточності в формулюваннях.",
+                    avg: "Знає базові поняття, але плутається у спеціалізованій термінології.",
+                    low: "Демонструє уривчасті знання, виявляє істотні прогалини."
+                },
+                {
+                    criterion: "Практичне володіння ПЗ",
+                    high: "Безпомилково виконує практичні операції в ПЗ, оптимізує розрахунки.",
+                    good: "Виконує роботу в ПЗ правильно, але користується найпростішими шляхами.",
+                    avg: "Потребує часткової допомоги викладача при роботі з ПЗ.",
+                    low: "Не здатний самостійно виконати базові дії в програмному середовищі."
+                }
+            ],
+            commonErrors: "1. Помилки адресації формул у табличному процесорі.\n2. Неправильне налаштування форматів даних.\n3. Порушення регламенту оформлення вихідного звіту.",
+            remediationTasks: "1. Інтерактивна вправа на тренажері з адресації комірок.\n2. Картка з повторним алгоритмом виконання роботи.\n3. Індивідуальна консультація з відпрацюванням помилок."
+        };
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderQuestions();
+            renderRubric();
+            updateStepUI();
+        });
+
+        // Navigation
+        function goToStep(stepIndex) {
+            appState.currentStep = stepIndex;
+            updateStepUI();
+            if(stepIndex === 4) {
+                renderSummaryDocument();
+            }
+        }
+
+        function updateStepUI() {
+            // Hide all sections
+            document.querySelectorAll('.step-content').forEach(sec => sec.classList.add('hidden'));
+            // Show current section
+            document.getElementById(`step-${appState.currentStep}`).classList.remove('hidden');
+
+            // Update Wizard Buttons
+            document.querySelectorAll('.step-btn').forEach((btn, idx) => {
+                if(idx === appState.currentStep) {
+                    btn.className = "step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-brand-500 text-brand-700 shadow-sm";
+                } else {
+                    btn.className = "step-btn p-3 rounded-xl border-2 transition flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 hover:border-slate-300";
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Render Questions (Step 1)
+        function renderQuestions() {
+            const container = document.getElementById('questions-list');
+            container.innerHTML = '';
+
+            appState.questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = "p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-4 relative group hover:border-brand-300 transition";
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-200 pb-3">
+                        <span class="font-bold text-sm text-brand-700">Завдання №${index + 1}</span>
+                        <div class="flex items-center gap-2">
+                            <select onchange="updateQuestion(${index}, 'level', this.value)" class="text-xs p-1.5 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-brand-500">
+                                <option value="Початковий/Базовий" ${q.level === 'Початковий/Базовий' ? 'selected' : ''}>Початковий/Базовий</option>
+                                <option value="Фахово-прикладний" ${q.level === 'Фахово-прикладний' ? 'selected' : ''}>Фахово-прикладний</option>
+                                <option value="Творчий" ${q.level === 'Творчий' ? 'selected' : ''}>Творчий</option>
+                            </select>
+                            <input type="number" min="0.5" step="0.5" value="${q.score}" onchange="updateQuestion(${index}, 'score', parseFloat(this.value))" class="w-16 text-xs p-1.5 bg-white border border-slate-300 rounded text-center" title="Бал">
+                            <span class="text-xs text-slate-500">б.</span>
+                            <button onclick="removeQuestion(${index})" class="text-rose-500 hover:text-rose-700 p-1 text-xs" title="Видалити">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Формулювання завдання</label>
+                            <textarea onchange="updateQuestion(${index}, 'text', this.value)" rows="2" class="w-full p-2 bg-white border border-slate-300 rounded text-xs focus:ring-1 focus:ring-brand-500">${q.text}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Правильна відповідь / Критерiй еталону</label>
+                            <textarea onchange="updateQuestion(${index}, 'answer', this.value)" rows="2" class="w-full p-2 bg-white border border-slate-300 rounded text-xs focus:ring-1 focus:ring-brand-500">${q.answer}</textarea>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addQuestion() {
+            appState.questions.push({
+                id: Date.now(),
+                type: "Фахова задача",
+                level: "Фахово-прикладний",
+                score: 1,
+                text: "Нове контрольне завдання...",
+                answer: "Еталонна відповідь..."
+            });
+            renderQuestions();
+        }
+
+        function removeQuestion(index) {
+            if(appState.questions.length > 1) {
+                appState.questions.splice(index, 1);
+                renderQuestions();
+            } else {
+                alert("Має бути принаймні одне контрольне завдання!");
+            }
+        }
+
+        function updateQuestion(index, field, value) {
+            appState.questions[index][field] = value;
+        }
+
+        // Render Rubric (Step 2)
+        function renderRubric() {
+            const tbody = document.getElementById('rubric-tbody');
+            tbody.innerHTML = '';
+
+            appState.rubric.forEach((r, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 border border-slate-200">
+                        <input type="text" value="${r.criterion}" onchange="updateRubric(${idx}, 'criterion', this.value)" class="w-full p-1 border border-slate-200 rounded font-semibold text-xs">
+                    </td>
+                    <td class="p-2 border border-slate-200 bg-emerald-50/50">
+                        <textarea onchange="updateRubric(${idx}, 'high', this.value)" rows="2" class="w-full p-1 border border-slate-200 rounded text-xs">${r.high}</textarea>
+                    </td>
+                    <td class="p-2 border border-slate-200 bg-sky-50/50">
+                        <textarea onchange="updateRubric(${idx}, 'good', this.value)" rows="2" class="w-full p-1 border border-slate-200 rounded text-xs">${r.good}</textarea>
+                    </td>
+                    <td class="p-2 border border-slate-200 bg-amber-50/50">
+                        <textarea onchange="updateRubric(${idx}, 'avg', this.value)" rows="2" class="w-full p-1 border border-slate-200 rounded text-xs">${r.avg}</textarea>
+                    </td>
+                    <td class="p-2 border border-slate-200 bg-rose-50/50">
+                        <textarea onchange="updateRubric(${idx}, 'low', this.value)" rows="2" class="w-full p-1 border border-slate-200 rounded text-xs">${r.low}</textarea>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateRubric(idx, field, val) {
+            appState.rubric[idx][field] = val;
+        }
+
+        // Render Final Document (Step 4)
+        function renderSummaryDocument() {
+            // Sync Form Inputs to State
+            appState.specialty = document.getElementById('specialty').value;
+            appState.courseTitle = document.getElementById('courseTitle').value;
+            appState.topicTitle = document.getElementById('topicTitle').value;
+            appState.controlType = document.getElementById('controlType').value;
+            appState.authorName = document.getElementById('authorName').value || "Здобувач вищої освіти";
+            appState.commonErrors = document.getElementById('commonErrors').value;
+            appState.remediationTasks = document.getElementById('remediationTasks').value;
+
+            // Fill Doc Info
+            document.getElementById('doc-specialty').innerText = appState.specialty;
+            document.getElementById('doc-course').innerText = appState.courseTitle;
+            document.getElementById('doc-control').innerText = appState.controlType;
+            document.getElementById('doc-topic').innerText = appState.topicTitle;
+            document.getElementById('doc-author').innerText = appState.authorName;
+            document.getElementById('doc-errors').innerText = appState.commonErrors;
+            document.getElementById('doc-remediation').innerText = appState.remediationTasks;
+            document.getElementById('doc-date').innerText = new Date().toLocaleDateString('uk-UA');
+
+            // Render Questions
+            const qContainer = document.getElementById('doc-questions');
+            qContainer.innerHTML = '';
+            appState.questions.forEach((q, idx) => {
+                qContainer.innerHTML += `
+                    <div class="border border-slate-200 p-3 rounded bg-slate-50">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>Завдання ${idx+1}. (${q.level})</span>
+                            <span>Бал: ${q.score} б.</span>
+                        </div>
+                        <p class="mb-2"><strong>Завдання:</strong> ${q.text}</p>
+                        <p class="text-slate-600"><strong>Еталон відповіді:</strong> ${q.answer}</p>
+                    </div>
+                `;
+            });
+
+            // Render Rubric
+            const rContainer = document.getElementById('doc-rubric-body');
+            rContainer.innerHTML = '';
+            appState.rubric.forEach(r => {
+                rContainer.innerHTML += `
+                    <tr>
+                        <td class="border border-slate-300 p-2 font-semibold">${r.criterion}</td>
+                        <td class="border border-slate-300 p-2">${r.high}</td>
+                        <td class="border border-slate-300 p-2">${r.good}</td>
+                        <td class="border border-slate-300 p-2">${r.avg}</td>
+                        <td class="border border-slate-300 p-2">${r.low}</td>
+                    </tr>
+                `;
+            });
+
+            saveToLocalStorage();
+        }
+
+        // Local Storage
+        function saveToLocalStorage() {
+            localStorage.setItem('kvm_constructor_state', JSON.stringify(appState));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('kvm_constructor_state');
+            if(saved) {
+                try {
+                    appState = JSON.parse(saved);
+                    // Fill inputs
+                    document.getElementById('specialty').value = appState.specialty || '';
+                    document.getElementById('courseTitle').value = appState.courseTitle || '';
+                    document.getElementById('topicTitle').value = appState.topicTitle || '';
+                    document.getElementById('controlType').value = appState.controlType || '';
+                    document.getElementById('authorName').value = appState.authorName || '';
+                    document.getElementById('commonErrors').value = appState.commonErrors || '';
+                    document.getElementById('remediationTasks').value = appState.remediationTasks || '';
+                } catch(e) { console.error("Error loading saved state", e); }
+            }
+        }
+
+        function resetConstructor() {
+            if(confirm("Ви дійсно бажаєте скинути всі введені дані до початкових?")) {
+                localStorage.removeItem('kvm_constructor_state');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
